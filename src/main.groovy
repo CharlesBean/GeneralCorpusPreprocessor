@@ -8,8 +8,8 @@ import groovy.sql.Sql
 
 // TODO - add driver??
 
-def databaseWebMD = [url: "jdbc:mysql://localhost:3306/WebMD1", user: "root", password: ""]
+def databaseWebMD = [url: 'jdbc:mysql://localhost:3306/WebMD1', user: 'root', password: '', driver: 'com.mysql.jdbc.Driver']
 def sql = Sql.newInstance(databaseWebMD.url, databaseWebMD.user, databaseWebMD.password)
 
-def rows = sql.rows("SELECT * FROM WebMD1.diabetes_exchange LIMIT 10;")
-println rows.join('\n')
+def rows = sql.rows('SELECT * FROM WebMD1.diabetes_exchange LIMIT 10;')
+println(rows.join('\n'))
