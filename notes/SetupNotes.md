@@ -15,12 +15,18 @@ Installing R (Ubuntu):
 
 ### TopicModels Package Setup
 
+Install lasso2 package
+
 Installing topicmodels
 	
 	- Install the "tm" package (install.packages("tm"))
 	- Install gsl
 		- Follow these instructions (http://stackoverflow.com/questions/24172188/how-can-i-install-topicmodels-package-in-r)
 	- Install the topicmodels package (install.packages("topicmodels"))
+        - Use CTM() to create a CTM object
+            - Use tm to create the first param (http://cran.r-project.org/web/packages/tm/vignettes/tm.pdf)
+        - Use build_graph() with the CTM to create a graph
+	
 
 
 ---------------------------------------------------

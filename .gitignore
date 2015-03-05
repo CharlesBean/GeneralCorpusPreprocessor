@@ -1,4 +1,10 @@
-### Idea Coverage ###
+### Other ###
+
+# Local properties file
+local.groovy
+
+
+### IntelliJ Idea Specific ###
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
 *.iml
@@ -46,7 +52,4 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
-
-
-### Other Coverage ###
 
