@@ -11,6 +11,9 @@ def processDiabetesExchangeForum() {
     int added = 0;
     int deleted = 0;
     
+    // If we want to remove posts that have essentially no content (after parsing)
+    boolean removeEmptyContent = false;
+    
     // Creating DBO and Our Preprocessor
     def databaseWebMD = [url: 'jdbc:mysql://localhost:3306/WebMD1', user: 'root', password: '', driver: 'com.mysql.jdbc.Driver']
     def sql = Sql.newInstance(databaseWebMD.url, databaseWebMD.user, databaseWebMD.password)
@@ -39,9 +42,11 @@ def processDiabetesExchangeForum() {
         
         // If this row is of no interest to us... (empty)
         if (content == null || content.size() == 0) {
-            // Delete the row from the table
-            sql.execute("DELETE FROM WebMD1.diabetes_exchange WHERE uniqueID=$uniqueID;")
-            
+            if (removeEmptyContent) {
+                // Delete the row from the table
+                sql.execute("DELETE FROM WebMD1.diabetes_exchange WHERE uniqueID=$uniqueID;")
+            }
+
             println "$uniqueID \t\t Deleted \n"
             deleted++
         }
