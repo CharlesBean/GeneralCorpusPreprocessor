@@ -1,4 +1,4 @@
-package classes
+package model.preprocessing
 
 import org.tartarus.snowball.EnglishSnowballStemmerFactory
 
@@ -7,7 +7,7 @@ import org.tartarus.snowball.EnglishSnowballStemmerFactory
  */
 
 public class Stemmer {
-    def snowballStem = {
+    def SnowballStem = {
         try {
             return EnglishSnowballStemmerFactory.getInstance().process(it)
         } catch (Exception e) {

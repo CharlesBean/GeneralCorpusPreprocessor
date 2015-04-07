@@ -1,21 +1,25 @@
-package classes
+package webmd
 
-import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
-import interfaces.Preprocessor
-
+import model.preprocessing.Preprocessor
+import model.preprocessing.Stemmer
 
 /**
  * Created by charles on 2/19/15.
  */
 class WebMDPreprocessor implements Preprocessor{
+
+    def mStemmer = new Stemmer();               // Stemming object that does any lifting
+    def mDBO;                                   // Our database object
+
     /**
      * * Non-default Constructor
      * @param DBO - A database object
      * @return 
      */
-    def WebMDPreprocessor(Sql DBO) {
+    def WebMDPreprocessor(Sql DBO, Stemmer stemmer) {
         mDBO = DBO;
+        mStemmer = stemmer;
     }
     
     /**
@@ -23,7 +27,7 @@ class WebMDPreprocessor implements Preprocessor{
      * @param string - DBO SQL Table row
      * @return
      */
-    String removeTags(String content) {
+    String RemoveTags(String content) {
         def tagRegex = ~"<.*?>"
         def matcher = (content =~ tagRegex)
         
@@ -38,7 +42,7 @@ class WebMDPreprocessor implements Preprocessor{
      * @param string - DBO SQL Table row
      * @return
      */
-    def removeNonAlphabeticals(String content) {
+    def RemoveNonalphabeticals(String content) {
         def nonAlphabeticalRegex = ~"[^a-zA-Z ]"
         def matcher = (content =~ nonAlphabeticalRegex)
 
@@ -53,12 +57,12 @@ class WebMDPreprocessor implements Preprocessor{
      * @param string - DBO SQL Table row
      * @return
      */
-    def stem(String content) {
+    def Stem(String content) {
         String stemmedContent = ""
         
         for (word in content.split(" ")) {
             if (word != null && word != "") {
-                stemmedContent += mStemmer.snowballStem(word) + " "
+                stemmedContent += mStemmer.SnowballStem(word) + " "
             }
         }
         
@@ -70,7 +74,7 @@ class WebMDPreprocessor implements Preprocessor{
      * @param string - DBO SQL Table row
      * @return
      */
-    def removeSlang(String content, File slangTerms) {
+    def RemoveSlang(String content, File slangTerms) {
         def lines =  slangTerms.readLines()
         def slangMap = new HashMap()
         def cleanedContent = ""
@@ -99,7 +103,7 @@ class WebMDPreprocessor implements Preprocessor{
      * @param string - DBO SQL Table row
      * @return
      */
-    def removeStopwords(String content, File stopWords) {
+    def RemoveStopwords(String content, File stopWords) {
         def lines = stopWords.readLines()
         def cleanedContent = ""
 
@@ -121,12 +125,10 @@ class WebMDPreprocessor implements Preprocessor{
      * @param content
      * @return
      */
-    def removeEmoticons(String content) {
+    def RemoveEmoticons(String content) {
         
     }
 
 
-    def mStemmer = new Stemmer();               // Stemming object that does any lifting
-    def mDBO;                                   // Our database object
 }
 

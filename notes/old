@@ -1,4 +1,7 @@
-import classes.WebMDPreprocessor
+@Grab('com.xlson.groovycsv:groovycsv:1.0')
+
+import webmd.WebMDPreprocessor
+import com.xlson.groovycsv.CsvParser
 import groovy.sql.Sql
 
 import java.sql.SQLException
@@ -10,36 +13,36 @@ import java.sql.SQLException
 def processDiabetesExchangeForum() {
     int added = 0;
     int deleted = 0;
-    
+
     // If we want to remove posts that have essentially no content (after parsing)
     boolean removeEmptyContent = false;
-    
+
     // Creating DBO and Our Preprocessor
     def databaseWebMD = [url: 'jdbc:mysql://localhost:3306/WebMD1', user: 'root', password: '', driver: 'com.mysql.jdbc.Driver']
     def sql = Sql.newInstance(databaseWebMD.url, databaseWebMD.user, databaseWebMD.password)
     def webMDpp = new WebMDPreprocessor(sql)
-    
-    
+
+
     try {
         // Add a new column for cleaned content (apply only once...)
-        sql.execute("ALTER TABLE WebMD1.diabetes_exchange ADD cleanedContent text;")
+        //sql.execute("ALTER TABLE WebMD1.diabetes_exchange ADD cleanedContent text;")
     }
     catch (SQLException e) {
         // Pass
     }
-    
-    
+
+
     sql.eachRow("SELECT * FROM WebMD1.diabetes_exchange;") {
         def content = it['content']
         def uniqueID = it['uniqueID']
-        
+
         content = content.toString().toLowerCase()
-        content = webMDpp.removeTags(content)
-        content = webMDpp.removeSlang(content, new File("../text/slangTerms.txt"))
-        content = webMDpp.removeStopwords(content, new File("../text/stopwords/english/ranks-nl/stopwords_english_1.txt"))
-        content = webMDpp.removeNonAlphabeticals(content)
-        content = webMDpp.stem(content)
-        
+        content = webMDpp.RemoveTags(content)
+        content = webMDpp.RemoveSlang(content, new File("../text/slangTerms.txt"))
+        content = webMDpp.RemoveStopwords(content, new File("../text/stopwords/english/ranks-nl/stopwords_english_1.txt"))
+        content = webMDpp.RemoveNonalphabeticals(content)
+        content = webMDpp.Stem(content)
+
         // If this row is of no interest to us... (empty)
         if (content == null || content.size() == 0) {
             if (removeEmptyContent) {
@@ -52,15 +55,22 @@ def processDiabetesExchangeForum() {
         }
         else
         {
-            // Update the cleanedContent column 
-            sql.executeUpdate("UPDATE WebMD1.diabetes_exchange SET cleanedContent=$content WHERE uniqueID=$uniqueID;")
+            // Update the cleanedContent column
+            //sql.executeUpdate("UPDATE WebMD1.diabetes_exchange SET cleanedContent=$content WHERE uniqueID=$uniqueID;")
 
             println "$uniqueID \t\t Added \n"
             added++
         }
     }
-    
+
     println "\n -- Added: $added \n -- Deleted: $deleted"
 }
 
-processDiabetesExchangeForum()
+
+def createTopicDatabase() {
+
+
+    def data = new CsvParser().parse(csv, readFirstLine:false, columnNames:['fruit', 'qty'])
+
+    def test = true;
+}

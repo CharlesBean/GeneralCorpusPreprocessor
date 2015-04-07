@@ -1,11 +1,11 @@
-package interfaces
+package model.preprocessing
 
 /**
  * Created by charles on 2/19/15.
  */
 
 /**
- * * Performs various preprocessing tasks to cleaning data
+ * * Performs various model.preprocessing tasks to cleaning data
  */
 interface Preprocessor {
     /**
@@ -13,40 +13,40 @@ interface Preprocessor {
      * @param content DBO SQL Table content
      * @return
      */
-    def removeTags(String content)
+    def RemoveTags(String content)
 
     /**
      * * Removes all punctuation from a content
      * @param content
      * @return
      */
-    def removeNonAlphabeticals(String content)
+    def RemoveNonalphabeticals(String content)
 
     /**
      * * Stems all words in a content 
      * @param content
      * @return
      */
-    def stem(String content)
+    def Stem(String content)
 
     /**
      * * Removes all slang terms from a content
      * @param content
      * @return
      */
-    def removeSlang(String content, File slangTerms)
+    def RemoveSlang(String content, File slangTerms)
 
     /**
      * * Removes all (english) stop-words from a content
      * @param content
      * @return
      */
-    def removeStopwords(String content, File stopWords)
+    def RemoveStopwords(String content, File stopWords)
 
     /**
      * * Removes all emoticons
      * @param content
      * @return
      */
-    def removeEmoticons(String content)
+    def RemoveEmoticons(String content)
 }
