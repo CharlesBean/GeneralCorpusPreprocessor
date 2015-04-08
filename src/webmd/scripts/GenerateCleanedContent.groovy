@@ -17,4 +17,4 @@ database.Connect()
 def webMDPreprocessor = new WebMDPreprocessor(database.GetDBO(), new Stemmer())
 def webMDGenerator = new WebMDGenerator(corpus, database, webMDPreprocessor);
 
-//webMDGenerator.CreatedCleanedContentColumn()
+webMDGenerator.CleanContent()

@@ -23,6 +23,7 @@ class WebMDGenerator {
     TopicTable mTopicTable
     TopicTermTable mTopicTermTable
     TopicRelationshipTable mRelationshipTable
+    DiabetesExchangeTable mDiabetesExchangeTable
 
     File mDocumentTopicCSV              // CSV file of [document x topic] with weight
     File mTopicTermCSV                  // CSV file of [topic x term] weight weight
@@ -34,7 +35,7 @@ class WebMDGenerator {
      * @param corpus
      * @param database
      */
-    WebMDGenerator(WebMDCorpus corpus, Database database, Preprocessor preprocessor) {
+    WebMDGenerator(WebMDCorpus corpus, Database database, WebMDPreprocessor preprocessor) {
         mCorpus = corpus
         mDatabase = database
         mPreprocessor = preprocessor
@@ -44,6 +45,7 @@ class WebMDGenerator {
         mTopicTable = new TopicTable(mDatabase, 'topic')
         mTopicTermTable = new TopicTermTable(mDatabase, 'topic_term')
         mRelationshipTable = new TopicRelationshipTable(mDatabase, 'topic_relationship')
+        mDiabetesExchangeTable = new DiabetesExchangeTable(mDatabase, 'diabetes_exchange')
     }
 
     // TODO - remove null
@@ -90,40 +92,10 @@ class WebMDGenerator {
         def test = true
     }
 
-    def AddCleanedContentColumn(String tableName, boolean removeEmptyContent) {
-        int added = 0;
-        int deleted = 0;
-
-        tableName = mDatabase.GetDatabaseName() + '.' + tableName;
-
-        sql.eachRow("SELECT * FROM $tableName;") {
-            def content = it['content']
-            def uniqueID = it['uniqueID']
-
-            content = content.toString().toLowerCase()
-            content = mPreprocessor.RemoveTags(content)
-            content = mPreprocessor.RemoveSlang(content, new File("../text/slangTerms.txt"))
-            content = mPreprocessor.RemoveStopwords(content, new File("../text/stopwords/english/ranks-nl/stopwords_english_1.txt"))
-            content = mPreprocessor.RemoveNonalphabeticals(content)
-            content = mPreprocessor.Stem(content)
-
-            // If this row is of no interest to us... (empty)
-            if (content == null || content.size() == 0) {
-                if (removeEmptyContent) {
-                    // Delete the row from the table
-                    sql.execute("DELETE FROM WebMD1.diabetes_exchange WHERE uniqueID=$uniqueID;")
-                }
-
-                println "$uniqueID \t\t Deleted \n"
-                deleted++
-            }
-            else
-            {
-                // Update the cleanedContent column
-                sql.executeUpdate("UPDATE WebMD1.diabetes_exchange SET cleaned_content=$content WHERE uniqueID=$uniqueID;")
-            }
+    def CleanContent(boolean removeEmptyContent=false) {
+        // If we create a cleaned_content column, or if it already exists
+        if (mDiabetesExchangeTable.CreateCleanedContentColumn()) {
+            mDiabetesExchangeTable.CleanContent(mPreprocessor, true)
         }
-
-        println "\n -- Added: $added \n -- Deleted: $deleted"
     }
 }
