@@ -80,6 +80,10 @@ class DiabetesExchangeTable extends Table {
         def tableName = mDatabase.GetDatabaseName() + '.' + mTableName;
         def queryString = "SELECT * FROM $tableName"        // ughh
 
+        // TODO - properties files
+        File slangTerms = new File("../../../text/slangTerms.txt")
+        File stopwords = new File("../../../text/stopwords/english/ranks-nl/stopwords_english_1.txt")
+
         // For each row in the table
         mDatabase.GetDBO().eachRow("SELECT * FROM WebMD1.diabetes_exchange", {
             def content = it['content']
@@ -88,8 +92,8 @@ class DiabetesExchangeTable extends Table {
             // Preprocess the content
             content = content.toString().toLowerCase()
             content = preprocessor.RemoveTags(content)
-            content = preprocessor.RemoveSlang(content, new File("../text/slangTerms.txt"))
-            content = preprocessor.RemoveStopwords(content, new File("../text/stopwords/english/ranks-nl/stopwords_english_1.txt"))
+            content = preprocessor.RemoveSlang(content, slangTerms)
+            content = preprocessor.RemoveStopwords(content, stopwords)
             content = preprocessor.RemoveNonalphabeticals(content)
             content = preprocessor.Stem(content)
 
@@ -99,13 +103,14 @@ class DiabetesExchangeTable extends Table {
                     RemoveRow(uniqueID)
                 }
 
-                println "$uniqueID \t\t Deleted \n"
+                println "Deleted - $uniqueID"
                 deleted++
             }
             else
             {
                 // Update the cleanedContent column
-                UpdateCleanedContent(uniqueID, content)
+                if (UpdateCleanedContent(uniqueID, content))
+                    added++
             }
         })
 

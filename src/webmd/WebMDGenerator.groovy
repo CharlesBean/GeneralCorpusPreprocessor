@@ -2,6 +2,7 @@ package webmd
 
 import groovy.sql.Sql
 import model.database.Database
+import model.forum.Corpus
 import model.preprocessing.Preprocessor
 import webmd.WebMDPreprocessor
 
@@ -14,9 +15,9 @@ import java.sql.SQLException
  */
 class WebMDGenerator {
 
-    def mCorpus
-    def mDatabase
-    def mPreprocessor
+    WebMDCorpus mCorpus
+    Database mDatabase
+    WebMDPreprocessor mPreprocessor
 
     DocumentTopicTable mDocTopicTable
     TermTable mTermTable
@@ -28,6 +29,8 @@ class WebMDGenerator {
     File mDocumentTopicCSV              // CSV file of [document x topic] with weight
     File mTopicTermCSV                  // CSV file of [topic x term] weight weight
     File mTopicTopicCSV                 // CSV file of [topic x topic] with weight
+
+    File mPropertiesFile                // TODO - implement properties file
 
     /**
      * Constructor
@@ -92,10 +95,19 @@ class WebMDGenerator {
         def test = true
     }
 
+    /**
+     * Takes the content column of our table, cleans each entry, and then
+     * inserts into cleaned_content column
+     *
+     * @param removeEmptyContent flag to remove empty content
+     * @return true if successful
+     */
     def CleanContent(boolean removeEmptyContent=false) {
         // If we create a cleaned_content column, or if it already exists
         if (mDiabetesExchangeTable.CreateCleanedContentColumn()) {
-            mDiabetesExchangeTable.CleanContent(mPreprocessor, true)
+            return mDiabetesExchangeTable.CleanContent(mPreprocessor, true)
         }
+
+        return false;
     }
 }
