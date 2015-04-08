@@ -1,7 +1,12 @@
 package webmd
 
+import groovy.sql.Sql
 import model.database.Database
-import model.Term
+import model.preprocessing.Preprocessor
+import webmd.WebMDPreprocessor
+
+
+import java.sql.SQLException
 
 
 /**
@@ -9,8 +14,9 @@ import model.Term
  */
 class WebMDGenerator {
 
-    def mCorpus = new WebMDCorpus()
-    def mDatabase = new Database(mCorpus, "jdbc:mysql://localhost:3306/", "root", "", "WebMD1")
+    def mCorpus
+    def mDatabase
+    def mPreprocessor
 
     DocumentTopicTable mDocTopicTable
     TermTable mTermTable
@@ -18,16 +24,20 @@ class WebMDGenerator {
     TopicTermTable mTopicTermTable
     TopicRelationshipTable mRelationshipTable
 
-    // TODO --- THISSS ->
-    // Column x Row     (TODO - see if I can get a CSV that has topics as column, term as row, weight as values!!)
-    File mDocumentTopicCSV              // CSV file of document x topic
-    File mTopicTermCSV                  // CSV file of topic x term
-    File mTopicTermWeightCSV            // CSV file of topic x weight
-    File mTopicTopicCSV
+    File mDocumentTopicCSV              // CSV file of [document x topic] with weight
+    File mTopicTermCSV                  // CSV file of [topic x term] weight weight
+    File mTopicTopicCSV                 // CSV file of [topic x topic] with weight
 
-    WebMDGenerator(WebMDCorpus corpus, Database database) {
+    /**
+     * Constructor
+     *
+     * @param corpus
+     * @param database
+     */
+    WebMDGenerator(WebMDCorpus corpus, Database database, Preprocessor preprocessor) {
         mCorpus = corpus
         mDatabase = database
+        mPreprocessor = preprocessor
 
         mDocTopicTable = new DocumentTopicTable(mDatabase, 'document_label')
         mTermTable = new TermTable(mDatabase, 'term')
@@ -41,7 +51,7 @@ class WebMDGenerator {
         mTopicTermCSV = topicTermCSV
     }
 
-    def BuildTables(File topicTermCSVFile) {
+    def BuildTopicModelTables(File topicTermCSVFile) {
         // TODO - To handle topic-term weight....
 
         mDatabase.Connect()
@@ -80,4 +90,40 @@ class WebMDGenerator {
         def test = true
     }
 
+    def AddCleanedContentColumn(String tableName, boolean removeEmptyContent) {
+        int added = 0;
+        int deleted = 0;
+
+        tableName = mDatabase.GetDatabaseName() + '.' + tableName;
+
+        sql.eachRow("SELECT * FROM $tableName;") {
+            def content = it['content']
+            def uniqueID = it['uniqueID']
+
+            content = content.toString().toLowerCase()
+            content = mPreprocessor.RemoveTags(content)
+            content = mPreprocessor.RemoveSlang(content, new File("../text/slangTerms.txt"))
+            content = mPreprocessor.RemoveStopwords(content, new File("../text/stopwords/english/ranks-nl/stopwords_english_1.txt"))
+            content = mPreprocessor.RemoveNonalphabeticals(content)
+            content = mPreprocessor.Stem(content)
+
+            // If this row is of no interest to us... (empty)
+            if (content == null || content.size() == 0) {
+                if (removeEmptyContent) {
+                    // Delete the row from the table
+                    sql.execute("DELETE FROM WebMD1.diabetes_exchange WHERE uniqueID=$uniqueID;")
+                }
+
+                println "$uniqueID \t\t Deleted \n"
+                deleted++
+            }
+            else
+            {
+                // Update the cleanedContent column
+                sql.executeUpdate("UPDATE WebMD1.diabetes_exchange SET cleaned_content=$content WHERE uniqueID=$uniqueID;")
+            }
+        }
+
+        println "\n -- Added: $added \n -- Deleted: $deleted"
+    }
 }

@@ -4,6 +4,8 @@ import groovy.sql.Sql
 import model.preprocessing.Preprocessor
 import model.preprocessing.Stemmer
 
+import java.sql.SQLException
+
 /**
  * Created by charles on 2/19/15.
  */
@@ -128,7 +130,5 @@ class WebMDPreprocessor implements Preprocessor{
     def RemoveEmoticons(String content) {
         
     }
-
-
 }
 

@@ -1,7 +1,8 @@
-package webmd
+package webmd.scripts
 
 import model.Term
 import model.database.Database
+import webmd.WebMDCorpus
 
 /**
  * Created by charles on 4/7/15.
