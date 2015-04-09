@@ -1,14 +1,6 @@
 package webmd
 
-import groovy.sql.Sql
 import model.database.Database
-import model.forum.Corpus
-import model.preprocessing.Preprocessor
-import webmd.WebMDPreprocessor
-
-
-import java.sql.SQLException
-
 
 /**
  * Created by charles on 4/7/15.
@@ -26,11 +18,11 @@ class WebMDGenerator {
     TopicRelationshipTable mRelationshipTable
     DiabetesExchangeTable mDiabetesExchangeTable
 
-    File mDocumentTopicCSV              // CSV file of [document x topic] with weight
-    File mTopicTermCSV                  // CSV file of [topic x term] weight weight
+    File mTopicDocumentCSV              // CSV file of [topic x document] with weight
+    File mTermTopicCSV                  // CSV file of [topic x term] weight weight
     File mTopicTopicCSV                 // CSV file of [topic x topic] with weight
 
-    File mPropertiesFile                // TODO - implement properties file
+    File mPropertiesFile                // TODO - implement properties file loading (somewhere...)
 
     /**
      * Constructor
@@ -51,15 +43,27 @@ class WebMDGenerator {
         mDiabetesExchangeTable = new DiabetesExchangeTable(mDatabase, 'diabetes_exchange')
     }
 
-    // TODO - remove null
-    def SetFiles(File documentTopicCSV=null, File topicTermCSV, File topicTermWeightCSV=null, File topicTopicCSV=null) {
-        mTopicTermCSV = topicTermCSV
+    /**
+     * Sets our member files. Each is a csv file representing a matrix - with the first term as the column,
+     * and the second as the row.
+     *
+     * @param topicDocumentCSV CSV file of [topic x document] with weight
+     * @param termTopicCSV CSV file of [topic x term] weight weight
+     * @param topicTopicCSV CSV file of [topic x topic] with weight
+     * @return
+     */
+    def SetFiles(File topicDocumentCSV, File termTopicCSV, File topicTopicCSV) {
+        mTopicDocumentCSV = topicDocumentCSV
+        mTermTopicCSV = termTopicCSV
+        mTopicTopicCSV = topicTopicCSV
     }
 
-    def BuildTopicModelTables(File topicTermCSVFile) {
-        // TODO - To handle topic-term weight....
-
-        mDatabase.Connect()
+    /**
+     * Creates and fills the topic model tables
+     *
+     * @return true on success
+     */
+    def BuildTopicModelTables() {
         /*
             Processing
          */
@@ -90,9 +94,6 @@ class WebMDGenerator {
 
             }
         }
-
-
-        def test = true
     }
 
     /**

@@ -7,8 +7,9 @@
 ## See This Webpage for a lot of help :)
 ## http://www.jstatsoft.org/v40/i13/paper
 
-## Takes about 3 minutes when limited to 1000 rows
+## Takes about 3 minutes when limited to 2000 rows (8GB Ram, i7)
 ## Change the CSV Output Path Var!!
+
 
 
 #######  Setup  #######
@@ -24,31 +25,39 @@ library(slam)
 connection <- dbConnect(dbDriver("MySQL"), dbname = "WebMD1", user = "root", password="")
 
 ## Queries the db for parsed content
-query <- "SELECT cleanedContent FROM WebMD1.diabetes_exchange WHERE cleanedContent IS NOT NULL ORDER BY date LIMIT 2000;"
-x <- dbGetQuery(connection, paste(query))
+query <- "SELECT * FROM WebMD1.diabetes_exchange WHERE cleanedContent IS NOT NULL ORDER BY date DESC LIMIT 2000;"
+table <- dbGetQuery(connection, paste(query))
 
 ## NOTE : Change me! CSV OuptutPath (use # topics and # documents for naming instead???)
-csvOutputPath = "~/Programming/Research/Projects/TopicEvolutionMSU/CTM/Output/diabetesExchange/"
-
+csvOutputPath = "~/Programming/Research/Projects/TopicEvolutionMSU/GeneralCorpusPreprocessor/text/csv/"
 
 
 
 #######  Document-Term Matrix Construction  #######
 
-## Creating a Volatile Corpus with the vector of documents (posts)
-webMD <- VCorpus(VectorSource(x[['cleanedContent']]))
+## Creating some lists
+uniqueIDList <- table['uniqueID']
+contentListt <- table['cleanedContent']
+contentDocumentMatrix <- table['cleanedContent']
+documentContentMatrix <- t(contentDocumentMatrix)
+
+## Creating a Volatile Corpus with the vector of documents (posts) //table[['cleanedContent']]
+webMD <- VCorpus(VectorSource(as.vector(documentContentMatrix)))
 
 ## Creating document-term matrix
 dtm <- DocumentTermMatrix(
   webMD,
   control = list(
-    weight = weightTfIdf,           # Term-frequency weight
+    weight = weightTf,              # Term-frequency weight
     tolower=TRUE,                   # Ensuring everything is lowercase, alphabetical, etc. (min word length 3)
     removeNumbers = TRUE,           
     minWordLength = 3,              
     removePunctuation = TRUE,
     stopwords = TRUE
   ))
+
+# Set column names (transpose to fit) - for some reason the dtm is transposed right now..
+rownames(dtm) <- t(uniqueIDList['uniqueID'])        
 
 ## term frequency-inverse document frequency (tf-idf) calculation (function)
 term_tfidf <- tapply(dtm$v/row_sums(dtm)[dtm$i], dtm$j, mean) * log2(nDocs(dtm)/col_sums(dtm > 0))
@@ -74,47 +83,33 @@ SEED    <- 2015
 correlatedTopicModel <- CTM(dtm, k = topics, control = list(seed = SEED, var = list(tol = 10^-4), em = list(tol = 10^-3)))
 
 
-#######  Display & Output  #######6322222222
 
-## Need this until I understand the [["..."]] notation below...
-CTMList <- list(CTM = correlatedTopicModel)
+#######  Display & Output  #######
 
-## Most likely topic (page 15)
-Topic <- topics(CTMList[["CTM"]], 1)
+terms <- as.vector(correlatedTopicModel@terms)
+documents <- as.vector(correlatedTopicModel@documents)
 
-## 'x' Most common terms
-Terms <- terms(CTMList[["CTM"]], 50)  ## 20 terms
+## data frame with terms as columns, and topics as terms/words
+## value is the weight logarithmized (log base 10?)
+termTopicMatrix <- as.data.frame(correlatedTopicModel@beta)
+names(termTopicMatrix) <- c(1:topics)
 
-## 'y' Most common topics
-Terms [, 1:30]  ## 30 topics
+## make a data frame with topics as cols, docs as rows and
+## cell values as weight
+topicDocumentMatrix <- as.data.frame(correlatedTopicModel@gamma)
+names(topicDocumentMatrix) <- c(1:topics)
 
+## adjacency matrix of topics to topics, no weighting
+topicTopicMatrix <- as.data.frame(build_graph(correlatedTopicModel, 1))
 
+## changing column names for termTopic and rownames for topicDocument [col-Row]
+colnames(termTopicMatrix) <- terms
+row.names(topicDocumentMatrix) <- documents
 
-
-# make a data frame with topics as cols, docs as rows and
-# cell values as posterior topic distribution for each document
-gammaDF <- as.data.frame(correlatedTopicModel@gamma) 
-names(gammaDF) <- c(1:topics)
-
-betaDF <- as.data.frame(correlatedTopicModel@beta)
-names(betaDF) <- c(1:topics)
-
-# Now for each doc, find just the top-ranked topic   
-toptopics <- as.data.frame(cbind(document = row.names(gammaDF), topic = apply(gammaDF, 1, function(x) { names(gammaDF)[which(x==max(x))] })))
-
-# inspect...
-toptopics 
-
-
-
-# Rows = docs, cols = topics, connection is weight
-write.csv(gammaDF, file = paste(csvOutputPath, 'posteriorTopicDistribution1'))
-
-## Write to csv
-write.csv(Terms, file = paste(csvOutputPath, 'test'))
-
-
-
+# Writing
+write.csv(termTopicMatrix, file = paste(csvOutputPath, 'termTopicMatrix.csv', sep = ''))
+write.csv(topicDocumentMatrix, file = paste(csvOutputPath, 'topicDocumentMatrix.csv', sep = ''))
+write.csv(topicTopicMatrix, file = paste(csvOutputPath, 'topicTopicMatrix.csv', sep = ''))
 
 #######  Closing  #######
 

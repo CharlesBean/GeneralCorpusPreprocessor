@@ -2,17 +2,25 @@ package webmd.scripts
 
 import model.Term
 import model.database.Database
+import model.preprocessing.Stemmer
 import webmd.WebMDCorpus
+import webmd.WebMDGenerator
+import webmd.WebMDPreprocessor
 
 /**
  * Created by charles on 4/7/15.
  */
 
-// TODO - To handle topic-term weight....
+def corpus = new WebMDCorpus()
+def database = new Database(corpus, "jdbc:mysql://localhost:3306/", "root", "", "WebMD1")
+def preprocessor = new WebMDPreprocessor(database.GetDBO(), new Stemmer())
+database.Connect()
 
-def mCorpus = new WebMDCorpus()
-def mDatabase = new Database(mCorpus, "jdbc:mysql://localhost:3306/", "root", "", "WebMD1")
+WebMDGenerator webMDGenerator = new WebMDGenerator(corpus, database, preprocessor)
 
-mDatabase.Connect()
+File topicDocumentCSV = new File("../../../text/csv/topicDocumentMatrix.csv")
+File termTopicCSV = new File("../../../text/csv/termTopicMatrix.csv")
+File topicTopicCSV = new File("../../../text/csv/topicTopicMatrix.csv")
 
-//WebMDGenerator webMDGenerator = new WebMDGenerator...
+webMDGenerator.SetFiles(topicDocumentCSV, termTopicCSV, topicTopicCSV)
+

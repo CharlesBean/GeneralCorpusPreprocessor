@@ -59,6 +59,19 @@ class DiabetesExchangeTable extends Table {
         }
     }
 
+    boolean CreateDocumentIDColumn() {
+        def tableName = mDatabase.GetDatabaseName() + '.' + mTableName
+        def queryString = "ALTER TABLE $tableName ADD document_id int;"
+
+        // Only intitiates
+        try {
+            return mDatabase.GetDBO().execute(queryString, [])
+        }
+        catch (SQLException e) {
+            return true
+        }
+    }
+
     /**
      * Inserts text into a column named 'cleaned_content'
      *
@@ -73,6 +86,13 @@ class DiabetesExchangeTable extends Table {
         return mDatabase.GetDBO().executeUpdate(queryString.toString(), [content, uniqueID])
     }
 
+    /**
+     * Cleans the content of posts in our database, and save thems to a new column in the same table.
+     *
+     * @param preprocessor removes stopwords, etc.
+     * @param removeEmptyContent flag - whether we should remove null and empty content
+     * @return true if success
+     */
     boolean CleanContent(WebMDPreprocessor preprocessor, boolean removeEmptyContent=false) {
         // TODO - log
         int added = 0;
