@@ -245,7 +245,7 @@ class WebMDGenerator {
                 index = index.toInteger() + 1
 
                 if (connected == "TRUE") {
-                    mRelationshipTable.AddRow(aTopicID.toInteger(), index.toInteger() + 1, 1.0)
+                    mRelationshipTable.AddRow(aTopicID.toInteger(), index.toInteger(), 1.0)
                     println "Added - TopicRelationship ($aTopicID, $index, $connected)"
                 }
             }
