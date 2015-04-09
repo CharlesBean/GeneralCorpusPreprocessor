@@ -1,6 +1,5 @@
 package webmd.scripts
 
-import model.Term
 import model.database.Database
 import model.preprocessing.Stemmer
 import webmd.WebMDCorpus
@@ -23,4 +22,4 @@ File termTopicCSV = new File("../../../text/csv/termTopicMatrix.csv")
 File topicTopicCSV = new File("../../../text/csv/topicTopicMatrix.csv")
 
 webMDGenerator.SetFiles(topicDocumentCSV, termTopicCSV, topicTopicCSV)
-
+webMDGenerator.GenerateTopicTables()

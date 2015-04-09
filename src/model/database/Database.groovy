@@ -67,6 +67,17 @@ class Database {
         return mTables.push(table);
     }
 
+    /**
+     *
+     * @param tableName
+     * @param columns
+     * @return
+     */
+    boolean CreateTable(String tableName, String columns) {
+        String queryString = "CREATE TABLE $tableName " + columns
+        mDBO.execute(queryString)
+    }
+
     Sql GetDBO() { return mDBO }
 
     String GetDatabaseName() { return mDatabaseName }

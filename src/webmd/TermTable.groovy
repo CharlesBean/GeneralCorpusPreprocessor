@@ -51,5 +51,20 @@ class TermTable extends Table {
         return mDatabase.GetDBO().execute(queryString.toString(), [id])
     }
 
-    // TODO - exists function
+    /**
+     * Gets a 'term_id' from a 'term'
+     *
+     * @param term term to look for
+     * @return id of the term
+     */
+    int GetID(String term) {
+        def tableName = mDatabase.GetDatabaseName() + '.' + mTableName
+        def queryString = "SELECT * FROM $tableName WHERE term=?"
+
+        def termID = mDatabase.GetDBO().firstRow(queryString.toString(), [term])
+
+        if (termID != null && termID.size() > 0 && termID.id) {
+            return termID.id
+        } else return -1
+    }
 }
