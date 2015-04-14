@@ -3,6 +3,7 @@ package webmd.scripts
 import model.database.Database
 import model.preprocessing.Stemmer
 import webmd.WebMDCorpus
+import webmd.WebMDDatabase
 import webmd.WebMDGenerator
 import webmd.WebMDPreprocessor
 
@@ -11,7 +12,7 @@ import webmd.WebMDPreprocessor
  */
 
 def corpus = new WebMDCorpus()
-def database = new Database(corpus, "jdbc:mysql://localhost:3306/", "root", "", "WebMD1")
+def database = new WebMDDatabase(corpus, "jdbc:mysql://localhost:3306/", "root", "", "WebMD1")
 def preprocessor = new WebMDPreprocessor(database.GetDBO(), new Stemmer())
 database.Connect()
 

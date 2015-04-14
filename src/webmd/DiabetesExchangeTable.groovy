@@ -22,6 +22,19 @@ class DiabetesExchangeTable extends Table {
         super(database, tableName)
     }
 
+    /**
+     * Adds a row to the diabetes_exchange table
+     *
+     * @param uniqueID
+     * @param qID
+     * @param localID
+     * @param title
+     * @param poster
+     * @param date
+     * @param content
+     * @param replyTo
+     * @return
+     */
     boolean AddRow(String uniqueID, String qID, int localID, String title, String poster, Date date, String content, String replyTo=null) {
         def tableName = mDatabase.GetDatabaseName() + '.' + mTableName
         def queryString = "INSERT INTO $tableName(uniqueID, qid, localID, title, poster, date, replyTo, content) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
@@ -59,19 +72,6 @@ class DiabetesExchangeTable extends Table {
         }
     }
 
-    boolean CreateDocumentIDColumn() {
-        def tableName = mDatabase.GetDatabaseName() + '.' + mTableName
-        def queryString = "ALTER TABLE $tableName ADD document_id int;"
-
-        // Only intitiates
-        try {
-            return mDatabase.GetDBO().execute(queryString, [])
-        }
-        catch (SQLException e) {
-            return true
-        }
-    }
-
     /**
      * Inserts text into a column named 'cleaned_content'
      *
@@ -94,7 +94,6 @@ class DiabetesExchangeTable extends Table {
      * @return true if success
      */
     boolean CleanContent(WebMDPreprocessor preprocessor, boolean removeEmptyContent=false) {
-        // TODO - log
         int added = 0;
         int deleted = 0;
         def tableName = mDatabase.GetDatabaseName() + '.' + mTableName;

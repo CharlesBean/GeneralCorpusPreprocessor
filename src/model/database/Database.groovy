@@ -6,19 +6,16 @@ import groovy.sql.Sql
 /**
  * Created by charles on 4/1/15.
  */
-class Database {
-    private String mHostURL;
-    private String mUsername;
-    private String mPassword;
-    private String mDriverClassName;
-    private String mTablePrefix;
-    private String mDatabaseName;
+abstract class Database {
+    protected String mHostURL
+    protected String mUsername
+    protected String mPassword
+    protected String mDriverClassName
+    protected String mTablePrefix
+    protected String mDatabaseName
 
-    private Sql mDBO;
-    private Corpus mCorpus;
-    private mTables = [];           // TODO - remove?
-
-    // TODO - create Disconnect()
+    protected Sql mDBO
+    protected Corpus mCorpus
 
     /**
      * Constructor
@@ -32,14 +29,14 @@ class Database {
      * @param driver - optional driver package/class name
      * @param tablePrefix - optional prefix for table access
      */
-    Database(Corpus corpus, String url, String user, String password, String databaseName, String driver=null, String tablePrefix=null) {
+    Database(Corpus corpus, String url, String user, String password, String databaseName, String driver=null, String tablePrefix="") {
         mCorpus = corpus
-        mHostURL = url + databaseName;         // Make sure leading '/' exists... ?
-        mUsername = user;
-        mPassword = password;
-        mDatabaseName = databaseName;
-        mDriverClassName = driver;
-        mTablePrefix = tablePrefix;
+        mHostURL = url + databaseName               // Make sure leading '/' exists
+        mUsername = user
+        mPassword = password
+        mDatabaseName = databaseName
+        mDriverClassName = driver
+        mTablePrefix = tablePrefix
     }
 
     /**
@@ -53,34 +50,19 @@ class Database {
                 mDBO = Sql.newInstance(mHostURL, mUsername, mPassword)
             }
         } catch (Exception e) {
-            throw e;            // TODO - log
+            throw e
         }
     }
 
     /**
-     * Adds a table to our DB's list of tables
-     *
-     * @param table
-     * @return true if the push was successful
+     * Closes a DB connection
      */
-    boolean AddTable(Table table) {
-        return mTables.push(table);
-    }
-
-    /**
-     *
-     * @param tableName
-     * @param columns
-     * @return
-     */
-    boolean CreateTable(String tableName, String columns) {
-        String queryString = "CREATE TABLE $tableName " + columns
-        mDBO.execute(queryString)
+    void Disconnect() {
+        if (mDBO)
+            mDBO.close()
     }
 
     Sql GetDBO() { return mDBO }
-
     String GetDatabaseName() { return mDatabaseName }
-
     String GetTablePrefix() { return mTablePrefix }
 }

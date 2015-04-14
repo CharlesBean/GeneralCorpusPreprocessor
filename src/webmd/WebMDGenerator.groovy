@@ -5,24 +5,22 @@ import model.database.Database
 /**
  * Created by charles on 4/7/15.
  */
+
+/**
+ * Generates a topic model database based off of the CTM results of the WebMD Diabetes Exchange.
+ *
+ */
 class WebMDGenerator {
 
     WebMDCorpus mCorpus
-    Database mDatabase
+    WebMDDatabase mDatabase
     WebMDPreprocessor mPreprocessor
-
-    DocumentTopicTable mDocTopicTable
-    TermTable mTermTable
-    TopicTable mTopicTable
-    TopicTermTable mTopicTermTable
-    TopicRelationshipTable mRelationshipTable
-    DiabetesExchangeTable mDiabetesExchangeTable
 
     File mCSVTopicDocument                      // CSV file of [topic x document] with weight
     File mCSVTermTopic                          // CSV file of [topic x term] weight weight
     File mCSVTopicTopic                         // CSV file of [topic x topic] with weight
 
-    File mPropertiesFile                        // TODO - implement properties file loading (somewhere...)
+    Properties mDatabaseProperties              // TODO - implement properties file loading (somewhere...)
 
     boolean mCreateTables = false               // Should we create topic model tables
     boolean mClearTables = true                 // Should we clear tables before construction
@@ -33,17 +31,10 @@ class WebMDGenerator {
      * @param corpus
      * @param database
      */
-    WebMDGenerator(WebMDCorpus corpus, Database database, WebMDPreprocessor preprocessor) {
+    WebMDGenerator(WebMDCorpus corpus, WebMDDatabase database, WebMDPreprocessor preprocessor) {
         mCorpus = corpus
         mDatabase = database
         mPreprocessor = preprocessor
-
-        mDocTopicTable = new DocumentTopicTable(mDatabase, 'document_label')
-        mTermTable = new TermTable(mDatabase, 'term')
-        mTopicTable = new TopicTable(mDatabase, 'topic')
-        mTopicTermTable = new TopicTermTable(mDatabase, 'topic_term')
-        mRelationshipTable = new TopicRelationshipTable(mDatabase, 'topic_relationship')
-        mDiabetesExchangeTable = new DiabetesExchangeTable(mDatabase, 'diabetes_exchange')
     }
 
     /**
@@ -68,8 +59,8 @@ class WebMDGenerator {
      */
     def GenerateTopicTables() {
         // Create and clearing the tables if necessary
-        if (mCreateTables) CreateTopicModelTables()
-        if (mClearTables) ClearTables()
+        if (mClearTables) mDatabase.ClearTables()
+        if (mCreateTables) mDatabase.CreateTables()
 
         ReadTopicDocumentMatrix()
         ReadTermTopicMatrix()
@@ -85,41 +76,11 @@ class WebMDGenerator {
      */
     boolean CleanContent(boolean removeEmptyContent=false) {
         // If we create a cleaned_content column, or if it already exists
-        if (mDiabetesExchangeTable.CreateCleanedContentColumn()) {
-            return mDiabetesExchangeTable.CleanContent(mPreprocessor, true)
+        if (mDatabase.GetDiabetesExchangeTable().CreateCleanedContentColumn()) {
+            return mDatabase.GetDiabetesExchangeTable().CleanContent(mPreprocessor, removeEmptyContent=true)
         }
 
         return false;
-    }
-
-    /**
-     * Creates our topic model tables. Paste queries below.
-     *
-     * @return true if successful
-     */
-    boolean CreateTopicModelTables() {
-        try{
-            mDatabase.CreateTable("document_label", "(post_id varchar(25) NOT NULL, topic_id int(10) NOT NULL, weight double NOT NULL, PRIMARY KEY (post_id, topic_id));")
-            mDatabase.CreateTable("topic", "(id int(10) NOT NULL AUTO_INCREMENT, PRIMARY KEY (id));")
-            mDatabase.CreateTable("term", "(id int(10) NOT NULL AUTO_INCREMENT, term varchar(50) NOT NULL, PRIMARY KEY (id));")
-            mDatabase.CreateTable("topic_relationship", "(topicid_A int(10) NOT NULL, topicid_B int(10) NOT NULL, weight double NOT NULL, PRIMARY KEY (topicid_A, topicid_B));")
-            mDatabase.CreateTable("topic_term", "(topicid int(10) NOT NULL, termid int(10) NOT NULL, weight double NOT NULL, PRIMARY KEY (topicid, termid));")
-
-            return true
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * Clears all topic model tables
-     */
-    void ClearTables() {
-        mTopicTable.Clear()
-        mTopicTermTable.Clear()
-        mDocTopicTable.Clear()
-        mTermTable.Clear()
-        mRelationshipTable.Clear()
     }
 
     /**
@@ -141,7 +102,7 @@ class WebMDGenerator {
 
         // Now lets add the topics to our 'topic' table (null entries - auto increment PK)
         1.upto(topicsList.size(), {
-            mTopicTable.AddRow()
+            mDatabase.GetTopicTable().AddRow()
             println "Added - Topic $it"
         })
 
@@ -159,7 +120,7 @@ class WebMDGenerator {
             List<String> row = rowString.split(',')[1..<rowString.split(',').size()]
             row.eachWithIndex { weight, index ->
                 index = index.toInteger() + 1
-                mDocTopicTable.AddRow(uniqueID.toString(), index.toInteger(), weight.toDouble())
+                mDatabase.GetDocumentTopicTable().AddRow(uniqueID.toString(), index.toInteger(), weight.toDouble())
                 println "Added - DocumentLabel ($uniqueID, $index, $weight)"
             }
         }
@@ -188,7 +149,7 @@ class WebMDGenerator {
             term = term.replace('\"', '')
 
             if (term.size() < 50){
-                mTermTable.AddRow(term)
+                mDatabase.GetTermTable().AddRow(term)
                 println "Added - Term $term"
             }
         }
@@ -208,11 +169,11 @@ class WebMDGenerator {
             List<String> row = rowString.split(',')[1..<rowString.split(',').size()]
             row.eachWithIndex { logWeight, index ->
                 String term = termList[index].replace('\"','')
-                int termID = mTermTable.GetID(term)
+                int termID = mDatabase.GetTermTable().GetID(term)
 
                 // If we got a result
                 if (termID != -1) {
-                    mTopicTermTable.AddRow(topicID.toInteger(), termID.toInteger(), logWeight.toDouble())
+                    mDatabase.GetTopicTermTable().AddRow(topicID.toInteger(), termID.toInteger(), logWeight.toDouble())
                     println "Added - TopicTerm ($topicID, $term, $logWeight)"
                 }
             }
@@ -245,7 +206,7 @@ class WebMDGenerator {
                 index = index.toInteger() + 1
 
                 if (connected == "TRUE") {
-                    mRelationshipTable.AddRow(aTopicID.toInteger(), index.toInteger() + 1, 1.0)
+                    mDatabase.GetTopicRelationshipTable().AddRow(aTopicID.toInteger(), index.toInteger() + 1, 1.0)
                     println "Added - TopicRelationship ($aTopicID, $index, $connected)"
                 }
             }

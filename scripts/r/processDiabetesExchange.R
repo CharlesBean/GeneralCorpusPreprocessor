@@ -20,6 +20,7 @@ library(tm)
 library(topicmodels)
 library(igraph)
 library(slam)
+library(lasso2)
 
 ## Creating a connection to the MySQL Local DB
 connection <- dbConnect(dbDriver("MySQL"), dbname = "WebMD1", user = "root", password="")
@@ -29,7 +30,10 @@ query <- "SELECT * FROM WebMD1.diabetes_exchange WHERE cleanedContent IS NOT NUL
 table <- dbGetQuery(connection, paste(query))
 
 ## NOTE : Change me! CSV OuptutPath (use # topics and # documents for naming instead???)
-csvOutputPath = "~/Programming/Research/Projects/TopicEvolutionMSU/GeneralCorpusPreprocessor/text/csv/"
+csvOutputPathDesktop = "~/Programming/Research/Projects/TopicEvolutionMSU/GeneralCorpusPreprocessor/text/csv/"
+csvOutputPathMac = "/Users/chuck1/Chas/Programming/Research/TopicEvolutionMSU/GeneralCorpusPreprocessor/GeneralCorpusPreprocessor/text/csv/"
+
+csvOutputPath = csvOutputPathMac
 
 
 
@@ -110,6 +114,8 @@ row.names(topicDocumentMatrix) <- documents
 write.csv(termTopicMatrix, file = paste(csvOutputPath, 'termTopicMatrix.csv', sep = ''))
 write.csv(topicDocumentMatrix, file = paste(csvOutputPath, 'topicDocumentMatrix.csv', sep = ''))
 write.csv(topicTopicMatrix, file = paste(csvOutputPath, 'topicTopicMatrix.csv', sep = ''))
+
+
 
 #######  Closing  #######
 

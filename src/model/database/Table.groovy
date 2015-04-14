@@ -1,21 +1,31 @@
 package model.database
+
 /**
  * Created by charles on 4/1/15.
  */
 abstract class Table {
 
-    // TODO - create another superclass - RelationalTable ??
-
-    protected String mTableName;
-    protected Database mDatabase;
+    protected String mTableName
+    protected Database mDatabase
 
     /**
      * Default constructor
      * @param mTableName
      */
     Table(Database database, String tableName) {
-        this.mDatabase = database;
-        this.mTableName = tableName
+        mDatabase = database
+        mTableName = mDatabase.GetTablePrefix() + tableName
+    }
+
+    /**
+     *
+     * @param tableName
+     * @param columns
+     * @return
+     */
+    boolean CreateTable(String columns) {
+        String queryString = "CREATE TABLE $mTableName " + columns
+        mDatabase.GetDBO().execute(queryString)
     }
 
     /**
